@@ -34,6 +34,7 @@ package org.trexarms {
 		import flash.events.FullScreenEvent;
 		import flash.events.KeyboardEvent;
 		import flash.events.TextEvent;
+		import flash.external.ExternalInterface;
 		import flash.net.navigateToURL;
 		import flash.net.URLRequest;
 		import flash.system.Capabilities;
@@ -970,6 +971,7 @@ package org.trexarms {
 				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tDisplay:             ' + '(' + Capabilities.screenResolutionX + ', ' + Capabilities.screenResolutionY + ') ' + Capabilities.screenDPI + 'dpi', BODY_STYLE, CALLSTACK_BYPASS);
 				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tSecurity Sandbox:    ' + Security.sandboxType, BODY_STYLE, CALLSTACK_BYPASS);
 				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tLocal File Access:   ' + (Capabilities.localFileReadDisable ? 'prohibited' : 'allowed'), BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tExternal Interface:  ' + (ExternalInterface.available ? 'available: "' + ExternalInterface.objectID + '"' : 'unavailable'), BODY_STYLE, CALLSTACK_BYPASS);
 				//  Flash 10.3 and higher
 //				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tParent domain:     ' + Security.pageDomain, BODY_STYLE, CALLSTACK_BYPASS);
 				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '==========================================================', BODY_STYLE, CALLSTACK_BYPASS);
