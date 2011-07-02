@@ -160,9 +160,6 @@ package org.trexarms {
 				addEventListener(Event.REMOVED_FROM_STAGE, removedFromStage);
 				addEventListener(Event.ADDED_TO_STAGE, setupStageListeners);
 				addEventListener(Event.ADDED_TO_STAGE, buildUI);
-
-				writeLine(new Date().toLocaleString(), COMMENT_STYLE, CALLSTACK_BYPASS);
-				writeLine('', COMMENT_STYLE, CALLSTACK_BYPASS);
 			}
 
 		//--------------------------------------
