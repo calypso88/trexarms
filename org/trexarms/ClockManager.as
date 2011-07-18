@@ -2,7 +2,6 @@ package org.trexarms {
 
 	/**
 	 *  Flash 10.0 ◆ Actionscript 3.0
-	 *  Copyright ©2011 Rob Sampson | rob@hattv.com | www.calypso88.com
 	 *
 	 *  www.TRexArms.org
 	 *  Licensed under the MIT License

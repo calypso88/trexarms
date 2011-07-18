@@ -2,7 +2,6 @@ package org.trexarms {
 
 	/**
 	 *  Flash 10.0 ◆ Actionscript 3.0
-	 *  Copyright ©2011 Rob Sampson | rob@hattv.com | www.calypso88.com
 	 *
 	 *  www.TRexArms.org
 	 *  Licensed under the MIT License
@@ -69,9 +68,9 @@ package org.trexarms {
 		//--------------------------------------
 		// CLASS CONSTANTS
 		//--------------------------------------
-		
+
 			/**  @private */
-			public static const VERSION:String = '0.0.1';
+			public static const VERSION:String = '0.0.2';
 
 			/**
 			 *  This is the top of a data structure to hold all our callbacks,
@@ -86,14 +85,14 @@ package org.trexarms {
 			 *    [2] Controller listeners	(processed third)
 			 *    [3] View listeners		(processed last)
 			 */
-			private const LISTENERS:Vector.<Dictionary> = new Vector.<Dictionary>(4, true);
+			private const LISTENERS:Vector.<Dictionary> = Vector.<Dictionary>([new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary()]);
 
 			/**
 			 *  This indexes every state that gets set and saves the most 
 			 *  recent value.
 			 */
 			private const STATE_ARCHIVE:Dictionary = new Dictionary();
-			
+
 			/**
 			 *  Ordered list of states that have been 'set' but have not been
 			 *  distributed to the callbacks yet. This is done to throttle
@@ -113,22 +112,18 @@ package org.trexarms {
 
 			//  Holds the singleton
 			private static const instance:StateManager = new StateManager();
-			
+
 			//  Flag so we can differentiate adding and removing listeners inside the setState loop
 			private static var _settingState:Boolean;
-			
+
 		//--------------------------------------
 		//  CONSTRUCTOR
 		//--------------------------------------
-	
+
 			/**  @private */
 			public function StateManager(){
 				super();
-				LISTENERS[0] = new Dictionary();	//  single-use
-				LISTENERS[1] = new Dictionary();	//  model
-				LISTENERS[2] = new Dictionary();	//  controller
-				LISTENERS[3] = new Dictionary();	//  view
-				
+				LISTENERS.fixed = true;
 				if(!instance) trace('[T-Rex Arms]: StateManager initialized, v.' + VERSION);
 			}
 
@@ -149,14 +144,14 @@ package org.trexarms {
 
 			/**  Whether we have asked for onTick callbacks from ClockManager */
 			private var _ticking:Boolean;
-			
+
 			/**  Counter for how many states we will touch this tick */
 			private var _statesToProcessThisTick:int;
 
 		//--------------------------------------
 		//  ACCESSORS
 		//--------------------------------------
-		
+
 			/**
 			 *  The number of items that will be processed from the queue.
 			 *  Increasing this number may cause slowdowns in state-heavy
@@ -191,10 +186,8 @@ package org.trexarms {
 			public function addSingleUseListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
 				if(!LISTENERS[0][state]) LISTENERS[0][state] = new Vector.<Function>();
 				LISTENERS[0][state].push(callback);
-//				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
 			}
-			
 
 			/**
 			 *  Sets a single use listener to fire after one or more other 
@@ -207,7 +200,7 @@ package org.trexarms {
 			public static function addSingleUseListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
-			
+
 			/**  @private */
 			public function addSingleUseListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
@@ -264,7 +257,7 @@ package org.trexarms {
 			public static function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
-			
+
 			/**  @private */
 			public function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
@@ -321,7 +314,7 @@ package org.trexarms {
 			public static function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
-			
+
 			/**  @private */
 			public function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
@@ -378,7 +371,7 @@ package org.trexarms {
 			public static function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
-			
+
 			/**  @private */
 			public function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
@@ -460,7 +453,7 @@ package org.trexarms {
 			/**  @private */
 			public function tickleState(state:String):*{
 				if(state in STATE_ARCHIVE) return setState(state, STATE_ARCHIVE[state]);
-				return setState(state, null);
+				return setState(state, void);
 			}
 
 			/**
@@ -480,7 +473,7 @@ package org.trexarms {
 			 *  @param processImmediately If true this request skips any queued setState calls and fires immediately.
 			 *  @return The data package passed in.
 			 */
-			public static function setState(state:String, data:* = null, processImmediately:Boolean = false):*{
+			public static function setState(state:String, data:* = void, processImmediately:Boolean = false):*{
 				return instance.setState(state, data, processImmediately);
 			}
 
@@ -493,28 +486,29 @@ package org.trexarms {
 				//  state now - no matter what.
 				if(_settingState && !processImmediately){
 					PENDING_STATE_KEYS.unshift(state);
-					PENDING_STATE_DATA.unshift(data || null);
-					if(!_ticking) ClockManager.registerCallback(onTick);				//  we need to be called in the future - so register for updates
+					PENDING_STATE_DATA.unshift(data || void);
+					if(!_ticking) ClockManager.registerCallback(onTick);		//  we need to be called in the future - so register for updates
 					_ticking = true;
 					return;
 				}
 
 				_settingState = true;
+				STATE_ARCHIVE[state] = data || void;
 				--_statesToProcessThisTick;
 				//  handle single-use listeners here
 				if(state in LISTENERS[0]){
 					while(LISTENERS[0][state].length){
 						var callback:Function = LISTENERS[0][state].pop();
-						(data === null) ? callback() : callback(data);			//  this allows us to have callbacks with no parameters
+						(data === void) ? callback() : callback(data);			//  this allows us to have callbacks with no parameters
 //						callback(data);
 					}
 				}
-			
+
 				for(var tier:int = 1; tier < LISTENERS.length; ++tier){
 					if(state in LISTENERS[tier] && LISTENERS[tier][state].length){
 						var i:int = LISTENERS[tier][state].length;
 						while(i--){
-							(data === null) ? LISTENERS[tier][state][i]() : LISTENERS[tier][state][i](data);
+							(data === void) ? LISTENERS[tier][state][i]() : LISTENERS[tier][state][i](data);
 						}
 					}
 				}
@@ -536,7 +530,7 @@ package org.trexarms {
 				while(_statesToProcessThisTick > 0 && PENDING_STATE_KEYS.length){
 					setState(PENDING_STATE_KEYS.pop(), PENDING_STATE_DATA.pop());
 				}
-				
+
 				if(PENDING_STATE_KEYS.length == 0){
 					//  we've gotten to the end of the queue
 					//  we can go to sleep for a bit...
@@ -556,16 +550,16 @@ package org.trexarms {
 //----------------------------------------------
 //  PRIVATE CLASS
 //----------------------------------------------
-	
+
 	import org.trexarms.StateManager;
-	
+
 	/**  private class for managing dependencies inside StateManager. */
 	final class DependencyChain {
 
 		//--------------------------------------
 		//  CONSTRUCTOR
 		//--------------------------------------
-	
+
 			/**  Creates a new DependencyChain object. */
 			public function DependencyChain(state:String, callback:Function, registryMethod:Function, populateImmediately:Boolean, blockers:Array){
 				_state = state;
@@ -573,7 +567,7 @@ package org.trexarms {
 				_registryMethod = registryMethod;
 				_populateImmediately = populateImmediately;
 				_blockers = blockers;
-				
+
 				//  start waiting for the first dependency
 				listenForNextBlocker();
 			}
@@ -591,7 +585,7 @@ package org.trexarms {
 		//--------------------------------------
 		//  CALLBACKS
 		//--------------------------------------
-		
+
 			private function listenForNextBlocker(...args):void{
 				if(_blockers.length){
 					//  we still have blockers - listen for the next one to clear

@@ -2,7 +2,6 @@ package org.trexarms {
 
 	/**
 	 *  Flash 10.0 ◆ Actionscript 3.0
-	 *  Copyright ©2011 Rob Sampson | rob@hattv.com | www.calypso88.com
 	 *
 	 *  www.TRexArms.org
 	 *  Licensed under the MIT License
@@ -34,9 +33,8 @@ package org.trexarms {
 		import flash.events.FullScreenEvent;
 		import flash.events.KeyboardEvent;
 		import flash.events.TextEvent;
-		import flash.external.ExternalInterface;
-		import flash.net.navigateToURL;
 		import flash.net.URLRequest;
+		import flash.net.navigateToURL;
 		import flash.system.Capabilities;
 		import flash.system.Security;
 		import flash.system.SecurityPanel;
@@ -49,6 +47,8 @@ package org.trexarms {
 		import flash.utils.Dictionary;
 		import flash.utils.getTimer;
 		
+		import org.trexarms.helpers.DesignTime;
+		
 	/**
 	 *  Console utility for reading log messages inside a swf.
 	 * 
@@ -59,13 +59,13 @@ package org.trexarms {
 		//--------------------------------------
 		// CLASS CONSTANTS
 		//--------------------------------------
-			
+
 			/**  This is the main body of the console */
 			private const TEXTFIELD:TextField = new TextField();
-			
+
 			/**  This is the command-entry line */
 			private const INPUT:TextField = new TextField();
-			
+
 			/**  This is the readout of what filter is in effect */
 			private const FILTER_LABEL:TextField = new TextField();
 
@@ -78,10 +78,11 @@ package org.trexarms {
 		//--------------------------------------
 
 			/**  @private */
-			public static const VERSION:String = '0.0.1';
+			public static const VERSION:String = '0.0.2';
 
 			/**  Keyboad key that opens and closes the console - default is ` */
-			private static const ACTIVATION_KEY:uint = Keyboard.BACKQUOTE;
+//			private static const ACTIVATION_KEY:uint = Keyboard.BACKQUOTE;		//  BACKQUOTE is a flash 10.2 property...
+			private static const ACTIVATION_KEY:uint = 192;
 
 			/**  Singleton holder */
 			private static const INSTANCE:Console = new Console();
@@ -209,7 +210,7 @@ package org.trexarms {
 		//--------------------------------------
 		//  PUBLIC METHODS
 		//--------------------------------------
-		
+
 			/**
 			 *  Empties stored data and turns off the Console. Any calls to 
 			 *  logging functions after the Console is disabled will return
@@ -237,18 +238,7 @@ package org.trexarms {
 					return;
 				}
 
-				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i){
-					if(arguments[i] is String){
-						s += arguments[i] + ' ';
-					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
-						s += arguments[i].toString() + ' ';
-					} else {
-						s += String(arguments[i]) + ' ';
-					}
-				}
-				
-				instance.writeLine(s, BODY_STYLE, new Error().getStackTrace());
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), BODY_STYLE);
 			}
 
 			/**
@@ -265,18 +255,7 @@ package org.trexarms {
 					return;
 				}
 
-				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i){
-					if(arguments[i] is String){
-						s += arguments[i] + ' ';
-					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
-						s += arguments[i].toString() + ' ';
-					} else {
-						s += String(arguments[i]) + ' ';
-					}
-				}
-				
-				instance.writeLine(s, WARNING_STYLE, new Error().getStackTrace());
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), WARNING_STYLE);
 			}
 
 			/**
@@ -293,18 +272,7 @@ package org.trexarms {
 					return;
 				}
 
-				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i){
-					if(arguments[i] is String){
-						s += arguments[i] + ' ';
-					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
-						s += arguments[i].toString() + ' ';
-					} else {
-						s += String(arguments[i]) + ' ';
-					}
-				}
-				
-				instance.writeLine(s, ERROR_STYLE, new Error().getStackTrace());
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), ERROR_STYLE);
 			}
 			
 			/**
@@ -321,18 +289,22 @@ package org.trexarms {
 					return;
 				}
 
-				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i){
-					if(arguments[i] is String){
-						s += arguments[i] + ' ';
-					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
-						s += arguments[i].toString() + ' ';
-					} else {
-						s += String(arguments[i]) + ' ';
-					}
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), COMMENT_STYLE);
+			}
+
+			/**
+			 *  @private
+			 *  Writes a line to the console directly without the normal 
+			 *  callstack extrospection. This should only be used by internal
+			 *  code and registered commands.
+			 */
+			public static function inject(key:String, ...arguments):void{
+				if(disabled){
+					if(traceWhileDisabled) trace.call(null, [key].concat(arguments));
+					return;
 				}
 				
-				instance.writeLine(s, COMMENT_STYLE, new Error().getStackTrace());
+				instance.writeLine(key, stringifyArgs(arguments), BODY_STYLE);
 			}
 			
 			/**
@@ -347,13 +319,13 @@ package org.trexarms {
 			public static function registerCommand(commandName:String, action:Function, description:String = ''):void{
 				if(COMMAND_BY_NAME[commandName]){
 					if(disabled) return;
-					instance.writeLine('Unable to register command "' + commandName + '": This command already exists.', ERROR_STYLE, new Error().getStackTrace());
+					instance.writeLine(classFromCallstack(new Error()), 'Unable to register command "' + commandName + '": This command already exists.', ERROR_STYLE);
 					return;
 				}
 
-				COMMAND_BY_NAME[commandName] = new ConsoleCommand(commandName, action, description);
+				COMMAND_BY_NAME[commandName.toLowerCase()] = new ConsoleCommand(commandName, action, description);
 				if(!COMMANDS) COMMANDS = new Vector.<ConsoleCommand>();
-				COMMANDS.push(COMMAND_BY_NAME[commandName]);
+				COMMANDS.push(COMMAND_BY_NAME[commandName.toLowerCase()]);
 
 				//  alphabetize the commands
 				COMMANDS.sort(function(a:ConsoleCommand, b:ConsoleCommand):Number{
@@ -361,6 +333,11 @@ package org.trexarms {
 					if(a.command == b.command) return 0;
 					return 1;
 				});
+			}
+
+			/**  @private */
+			public static function hideConsole():void{
+				if(instance) instance.hideConsole();
 			}
 
 			/**
@@ -378,6 +355,11 @@ package org.trexarms {
 					FILTER_LABEL.htmlText = '<a href="event:closeConsole">[Hide Console]</a> ';
 					if(stage) stage.focus = null;
 				}
+			}
+
+			/**  @private */
+			public static function showConsole():void{
+				if(instance) instance.showConsole();
 			}
 			
 			/**
@@ -405,19 +387,19 @@ package org.trexarms {
 			 *
 			 *  @param s The raw message to add to the console
 			 *  @param style The style object to correspond with the StyleSheet
-			 *  @param callStack An Error stack containing the Class that logged this line of text.
+			 *  @param key The category to index this line under
 			 */
-			public function writeLine(s:String, style:Object, callStack:String):void{
+			public function writeLine(key:String, s:String, style:Object):void{
 				clipboardLog += s + '\n';										//  add the raw text into the master string - this is what goes to the clipboard on a copy-all
 				if(TRACE_ALL_MESSAGES) trace(s);
 
 				var line:String = (LINE_NUMBERS_ENABLED) ? formattedLineNumber(++currentLineNumber) : '';
 
 				if(CATEGORIES_ENABLED){
-					if(callStack == CALLSTACK_BYPASS){
+					if(key == CALLSTACK_BYPASS){
 						CATEGORY_BY_LINE_NUMBER.push('');						//  if we skip a line - make sure our two lookups are still in sync
 					} else {
-						line += mapLineToCategory(callStack) + ' ';				//  if categories are on - prepend the name of the calling class
+						line += mapLineToCategory(key) + ' ';					//  if categories are on - prepend the name of the category
 					}
 				}
 
@@ -589,6 +571,7 @@ package org.trexarms {
 						(active) ? hideConsole() : showConsole();
 						break;
 					case Keyboard.C:
+					case 67:
 						if(e.shiftKey && e.ctrlKey) System.setClipboard(clipboardLog);
 						break;
 					case Keyboard.ENTER:
@@ -623,6 +606,7 @@ package org.trexarms {
 				}
 				
 				if(e.keyCode == Keyboard.UP || e.keyCode == Keyboard.TAB){
+					stage.focus = INPUT;										//  console just opened in keyDown...
 					INPUT.setSelection(INPUT.length, INPUT.length);				//  move the caret to the end...
 				}
 				
@@ -651,6 +635,59 @@ package org.trexarms {
 		//--------------------------------------
 		//  PRIVATE & PROTECTED INSTANCE METHODS
 		//--------------------------------------
+
+			/**
+			 *  This function parses the name of the calling class out of an
+			 *  Error's callstack.
+			 *
+			 *  Borrowed some parsing from http://www.ultrashock.com/forum/viewthread/95261/
+			 */
+			private static function classFromCallstack(err:Error):String{
+				if(!err) return '';
+
+				var line:String = err.getStackTrace().split('\tat ')[2];		//  isolate the nearest line in the stack
+				var packageTerminator:int = line.indexOf('::');					//  index where the package ends
+				var classTerminator:int = line.indexOf('()');					//  index where the class ends
+				
+				if(packageTerminator == -1){
+					var func:int = line.indexOf('Function');
+					if((func < 2 && func > -1) || classTerminator == -1){		//  is this is a closure
+						return 'Anonymous';
+					} else {
+						//  this is probably the main class
+						line = line.substring(0, classTerminator);
+					}
+				} else {
+					//  there are a bunch of other formats but we just want what's between the :: and the ()
+					line = line.substring(packageTerminator + 2, classTerminator);
+				}
+
+				if(line.indexOf('$') > -1) line = line.substring(0, line.indexOf('$'));
+				if(line.indexOf('/') > -1) line = line.substring(0, line.indexOf('/'));
+				return line;
+			}
+
+			/**  Converts a collection of parameters into a single string representation */
+			private static function stringifyArgs(...arguments):String{
+				var s:String = '';
+				for(var i:int = 0; i < arguments.length; ++i){
+					if(arguments[i] == null){
+						s += 'null ';
+					} else if(arguments[i] == undefined){
+						s += 'undefined ';
+					} else if(arguments[i] == void){
+						s += 'void ';
+					} else if(arguments[i] is String){
+						s += arguments[i] + ' ';
+					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
+						s += arguments[i].toString() + ' ';
+					} else {
+						s += String(arguments[i]) + ' ';
+					}
+				}
+				
+				return s;
+			}
 
 			/**
 			 *  Create the text styling.
@@ -707,50 +744,32 @@ package org.trexarms {
 			}
 
 			/**
-			 *  This function parses the name of the calling class out of 
-			 *  a callstack. Since the callstack has many formats, this is
-			 *  probably not bulletproof yet.
-			 * 
-			 *  This function also generates the lookup vector to find 
-			 *  the category of any given text line in the console.
-			 * 
-			 *  Borrowed some parsing from http://www.ultrashock.com/forum/viewthread/95261/
+			 *  Generates a lookup vector to find the category of any given 
+			 *  text line in the console. This also returns a formatted version
+			 *  of the category for display.
+			 *
 			 */
-			private function mapLineToCategory(callStack:String):String{
-				if(callStack == null){											//  if the callstack is empty, we're running in a release swf - no debug data available
+			private function mapLineToCategory(category:String):String{
+				if(category == null){											//  if the callstack is empty, we're running in a release swf - no debug data available
 					CATEGORY_BY_LINE_NUMBER.push('');
-					return '';
+					return CATEGORIES_ENABLED ? '             ' : '';
 				}
 
-				var line:String = callStack.split('\tat ')[2];					//  isolate the nearest line in the stack
-				var packageTerminator:int = line.indexOf('::');					//  index where the package ends
-				var classTerminator:int = line.indexOf('()');					//  index where the class ends
-
-				if(packageTerminator == -1){									//  are we in top-level code...
-					var func:int = line.indexOf('Function');
-					if((func < 2 && func > -1) || classTerminator == -1){	//  is this is a closure
-						CATEGORY_BY_LINE_NUMBER.push('_anon');
-						return '<a href="event:_anon">   Anonymous</a>';
-					} else {
-						//  this is probably the main class
-						line = line.substring(0, classTerminator);
-					}
-				} else {
-					//  there are a bunch of other formats but we just want what's between the :: and the ()
-					line = line.substring(packageTerminator + 2, classTerminator);
+				if(category == 'Anonymous'){
+					CATEGORY_BY_LINE_NUMBER.push('_anon');
+					return '<a href="event:_anon">   Anonymous</a>';
 				}
 
-				if(line.indexOf('$') > -1) line = line.substring(0, line.indexOf('$'));
-				CATEGORY_BY_LINE_NUMBER.push(line);
+				CATEGORY_BY_LINE_NUMBER.push(category);
 
 				//  for long class names, we truncate to fit in 12 characters...
-				if(line.length > 12) return '<a href="event:' + line + '">' + line.substr(0, 5) + '..' + line.substr(line.length - 5, 5) + '</a>';
+				if(category.length > 12) return '<a href="event:' + category + '">' + category.substr(0, 5) + '..' + category.substr(category.length - 5, 5) + '</a>';
 
 				//  ...otherwise we pad spaces on the left (this gives us right-justification)
-				while(line.length < 12) line = ' ' + line;
-				return '<a href="event:' + CATEGORY_BY_LINE_NUMBER[CATEGORY_BY_LINE_NUMBER.length - 1] + '">' + line + '</a>';
+				while(category.length < 12) category = ' ' + category;
+				return '<a href="event:' + CATEGORY_BY_LINE_NUMBER[CATEGORY_BY_LINE_NUMBER.length - 1] + '">' + category + '</a>';
 			}
-			
+
 			/**
 			 *  Takes the contents of the input textfield and attempts to
 			 *  find a corresponding command - if so, it executes and passes
@@ -760,7 +779,10 @@ package org.trexarms {
 				if(!active || disabled || INPUT.text == '') return;				//  make doubly sure we don't execute anything unless open
 
 				var a:Array = INPUT.text.split(' ');
-				
+				while(a.length && a[a.length - 1] == '') a.pop();
+
+				if(a.length < 1) return;
+
 				if(SAVED_COMMANDS.length == 0 || INPUT.text != SAVED_COMMANDS[SAVED_COMMANDS.length - 1]){
 					SAVED_COMMANDS.push(INPUT.text);
 				}
@@ -768,31 +790,31 @@ package org.trexarms {
 				savedCommandIndex = -1;
 				INPUT.text = '';
 
-				var cmd:String = a[0];
-
-				instance.writeLine(cmd, COMMAND_STYLE, CALLSTACK_BYPASS);
-
-				if(COMMAND_BY_NAME[cmd]){
+				if(COMMAND_BY_NAME[String(a[0]).toLowerCase()]){
+					var cmd:ConsoleCommand = COMMAND_BY_NAME[String(a[0]).toLowerCase()];
 					a.shift();
 					
 					if(a.length > 0){
 						try{
-							COMMAND_BY_NAME[cmd].action.apply(null, a);
+							instance.writeLine(CALLSTACK_BYPASS, cmd.command + '(' + a + ')', COMMAND_STYLE);
+							cmd.action.apply(null, a);
 						} catch(err:Error){
-							instance.writeLine('Command failed: ' + cmd + '(' + a + ')', COMMAND_STYLE, CALLSTACK_BYPASS);
-							instance.writeLine(err.message, COMMAND_STYLE, CALLSTACK_BYPASS);
+							instance.writeLine(CALLSTACK_BYPASS, 'Command failed: ' + cmd.command + '(' + a + ')', COMMAND_STYLE);
+							instance.writeLine(CALLSTACK_BYPASS, err.message, COMMAND_STYLE);
 						}
 					} else {
 						try{
-							COMMAND_BY_NAME[cmd].action();
+							instance.writeLine(CALLSTACK_BYPASS, cmd.command + '()', COMMAND_STYLE);
+							cmd.action();
 						} catch(err:Error){
-							instance.writeLine('Command failed: ' + cmd + '()', COMMAND_STYLE, CALLSTACK_BYPASS);
-							instance.writeLine(err.message, COMMAND_STYLE, CALLSTACK_BYPASS);
+							instance.writeLine(CALLSTACK_BYPASS, 'Command failed: ' + cmd.command + '()', COMMAND_STYLE);
+							instance.writeLine(CALLSTACK_BYPASS, err.message, COMMAND_STYLE);
 						}
 					}
 				} else {
 					//  no command by that name...
-					instance.writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Command not found.', ERROR_STYLE, CALLSTACK_BYPASS);
+					instance.writeLine(CALLSTACK_BYPASS, a[0], COMMAND_STYLE);
+					instance.writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Command not found.', ERROR_STYLE);
 				}
 			}
 			
@@ -804,7 +826,8 @@ package org.trexarms {
 				for(var i:int = 0; i < COMMANDS.length; ++i){
 					//  look for match...
 					if(COMMANDS[i].commandLC.search(lc) == 0){
-						INPUT.text = COMMANDS[i].command;
+						INPUT.text = COMMANDS[i].command + ' ';
+						stage.focus = INPUT;
 						INPUT.setSelection(INPUT.length, INPUT.length);			//  move the caret to the end
 						return;
 					}
@@ -823,7 +846,7 @@ package org.trexarms {
 			/** Restricts Console to only showing logs from a given class. */
 			private function changeFilter(...args):void{
 				if(!args || args.length < 1 || !args[0] is String || !args[0]){
-					instance.writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Invalid filter entered.', WARNING_STYLE, CALLSTACK_BYPASS);
+					instance.writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Invalid filter entered.', WARNING_STYLE);
 					filterActive = false;
 					FILTER_LABEL.htmlText = '<a href="event:closeConsole">[Hide Console]</a> ';
 					if(active){
@@ -897,22 +920,28 @@ package org.trexarms {
 				registerCommand('os', printOSCommand, 'Print the current Operating System.');
 				registerCommand('language', printLanguageCommand, 'Print the current system language.');
 				registerCommand('system', printSystemSummaryCommand, 'Print a summary of the current system.');
-				registerCommand('localstoragesettings', openLocalStorageSettingsCommand, 'Opens the Local Storage Settings panel.');
-				registerCommand('globalstoragesettings', openGlobalStorageSettingsCommand, 'Opens the Global Storage Settings panel in a new browser window.');
-				registerCommand('globalsecuritysettings', openGlobalSecuritySettingsCommand, 'Opens the Global Security Settings panel in a new browser window.');
+				registerCommand('localStorageSettings', openLocalStorageSettingsCommand, 'Opens the Local Storage Settings panel.');
+				registerCommand('globalStorageSettings', openGlobalStorageSettingsCommand, 'Opens the Global Storage Settings panel in a new browser window.');
+				registerCommand('globalSecuritySettings', openGlobalSecuritySettingsCommand, 'Opens the Global Security Settings panel in a new browser window.');
 				registerCommand('gc', gcCommand, 'Force the Garbage Collector to run.');
 				registerCommand('memory', memoryCommand, 'Print the current memory usage.');
 				registerCommand('time', timeCommand, 'Print the current system time.');
 				registerCommand('uptime', uptimeCommand, 'Print the amount of time this swf has been running.');
 				registerCommand('about', aboutCommand, 'About this Console.');
+
+//  THIS IS STILL WAY TOO BUGGY TO UNLEASH...
+//				if(!DesignTime.DISABLED){
+//					registerCommand('designTime', function(...args):void{ DesignTime.designTime(stage) }, 'Enter DesignTime');
+//					registerCommand('runTime', DesignTime.runTime, 'Exit DesignTime');
+//				}
 			}
-			
+
 			private function helpCommand(...args):void{
 				var s:String;
 				var i:int;
 				var len:int = COMMANDS.length;
 
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Available console commands:', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Available console commands:', BODY_STYLE);
 
 				if(args && args.length && args[0] == '-l'){
 					var rows:int = (len % 3 == 0) ? len / 3 : int(len / 3) + 1;
@@ -925,13 +954,13 @@ package org.trexarms {
 						
 						if(COMMANDS.length > i + rows + rows) s += COMMANDS[i + rows + rows].command;
 						
-						writeLine((CATEGORIES_ENABLED ? '             ' : '') + s, BODY_STYLE, CALLSTACK_BYPASS);
+						writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + s, BODY_STYLE);
 					}
 				} else {
 					for(i = 0; i < len; ++i){
 						s = COMMANDS[i].command;
 						while(s.length < 25) s += ' ';
-						writeLine((CATEGORIES_ENABLED ? '             ' : '') + s + ' ' + COMMANDS[i].description, BODY_STYLE, CALLSTACK_BYPASS);
+						writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + s + ' ' + COMMANDS[i].description, BODY_STYLE);
 					}
 				}
 			}
@@ -941,40 +970,39 @@ package org.trexarms {
 			}
 			
 			private function printVersionCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Console V' + VERSION, BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Console V' + VERSION, BODY_STYLE);
 			}
 			
 			private function printFlashPlayerCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + Capabilities.version + ' ' + (Capabilities.isDebugger ? '[Debug]' : '[Release]'), BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + Capabilities.version + ' ' + (Capabilities.isDebugger ? '[Debug]' : '[Release]'), BODY_STYLE);
 			}
 
 			private function printOSCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + Capabilities.os, BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + Capabilities.os, BODY_STYLE);
 			}
 			
 			private function printLanguageCommand(...args):void{
 				const lookup:Array = ['cs', 'Czech', 'da', 'Danish', 'nl', 'Dutch', 'en', 'English', 'fi', 'Finnish', 'fr', 'French', 'de', 'German', 'hu', 'Hungarian', 'it', 'Italian', 'ja', 'Japanese', 'ko', 'Korean', 'no', 'Norwegian', 'xu', 'Other/Unknown', 'pl', 'Polish', 'pt', 'Portuguese', 'ru', 'Russian', 'zh-CN', 'Simplified Chinese', 'es', 'Spanish', 'sv', 'Swedish', 'zh-TW', 'Traditional Chinese', 'tr', 'Turkish'];
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + lookup[lookup.indexOf(Capabilities.language) + 1], BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + lookup[lookup.indexOf(Capabilities.language) + 1], BODY_STYLE);
 			}
 			
 			private function printSystemSummaryCommand(...args):void{
 				const lookup:Array = ['cs', 'Czech', 'da', 'Danish', 'nl', 'Dutch', 'en', 'English', 'fi', 'Finnish', 'fr', 'French', 'de', 'German', 'hu', 'Hungarian', 'it', 'Italian', 'ja', 'Japanese', 'ko', 'Korean', 'no', 'Norwegian', 'xu', 'Other/Unknown', 'pl', 'Polish', 'pt', 'Portuguese', 'ru', 'Russian', 'zh-CN', 'Simplified Chinese', 'es', 'Spanish', 'sv', 'Swedish', 'zh-TW', 'Traditional Chinese', 'tr', 'Turkish'];
 				const ms:uint = getTimer();
 				
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '======================SYSTEM SUMMARY======================', BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tOperating System:    ' + Capabilities.os, BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tFlash Plugin:        ' + Capabilities.version + ' ' + (Capabilities.isDebugger ? '[Debug]' : '[Release]'), BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tSystem Language:     ' + lookup[lookup.indexOf(Capabilities.language) + 1], BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tMemory Usage:        ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tRun time:            ' + int(ms / 60000) + ' minutes, ' + int((ms % 60000) / 1000) + ' seconds', BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tSystem time:         ' + new Date().toLocaleString(), BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tDisplay:             ' + '(' + Capabilities.screenResolutionX + ', ' + Capabilities.screenResolutionY + ') ' + Capabilities.screenDPI + 'dpi', BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tSecurity Sandbox:    ' + Security.sandboxType, BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tLocal File Access:   ' + (Capabilities.localFileReadDisable ? 'prohibited' : 'allowed'), BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tExternal Interface:  ' + (ExternalInterface.available ? 'available: "' + ExternalInterface.objectID + '"' : 'unavailable'), BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '======================SYSTEM SUMMARY======================', BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tOperating System:    ' + Capabilities.os, BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tFlash Plugin:        ' + Capabilities.version + ' ' + (Capabilities.isDebugger ? '[Debug]' : '[Release]'), BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tSystem Language:     ' + lookup[lookup.indexOf(Capabilities.language) + 1], BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tMemory Usage:        ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tRun time:            ' + int(ms / 60000) + ' minutes, ' + int((ms % 60000) / 1000) + ' seconds', BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tSystem time:         ' + new Date().toLocaleString(), BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tDisplay:             ' + '(' + Capabilities.screenResolutionX + ', ' + Capabilities.screenResolutionY + ') ' + Capabilities.screenDPI + 'dpi', BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tSecurity Sandbox:    ' + Security.sandboxType, BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tLocal File Access:   ' + (Capabilities.localFileReadDisable ? 'prohibited' : 'allowed'), BODY_STYLE);
 				//  Flash 10.3 and higher
-//				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '\tParent domain:     ' + Security.pageDomain, BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + '==========================================================', BODY_STYLE, CALLSTACK_BYPASS);
+//				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '\tParent domain:     ' + Security.pageDomain, BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '==========================================================', BODY_STYLE);
 			}
 			
 			private function openLocalStorageSettingsCommand(...args):void{
@@ -982,39 +1010,54 @@ package org.trexarms {
 			}
 			
 			private function openGlobalStorageSettingsCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Opening: http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager03.html', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Opening: http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager03.html', BODY_STYLE);
 				navigateToURL(new URLRequest('http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager03.html'), '_blank');
 			}
 
 			private function openGlobalSecuritySettingsCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Opening: http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Opening: http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html', BODY_STYLE);
 				navigateToURL(new URLRequest('http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html'), '_blank');
 			}
 
 			private function gcCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Current memory: ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE, CALLSTACK_BYPASS);
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Activating Garbage Collection', BODY_STYLE, CALLSTACK_BYPASS);
-				System.gc();
-				System.gc();
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'Current memory: ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Current memory: ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Activating Garbage Collection', BODY_STYLE);
+				System.gc();	//  mark
+				System.gc();	//  sweep
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'Current memory: ' + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE);
 			}
 			
 			private function memoryCommand(...args):void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + (System.totalMemory / 1048576).toFixed(1) + 'mb', BODY_STYLE);
 			}
 
 			private function timeCommand():void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + new Date().toLocaleString(), BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + new Date().toLocaleString(), BODY_STYLE);
 			}
 			
 			private function uptimeCommand():void{
 				const ms:uint = getTimer();
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + int(ms / 60000) + ' minutes, ' + int((ms % 60000) / 1000) + ' seconds', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + int(ms / 60000) + ' minutes, ' + int((ms % 60000) / 1000) + ' seconds', BODY_STYLE);
 			}
 			
 			private function aboutCommand():void{
-				writeLine((CATEGORIES_ENABLED ? '             ' : '') + 'This Console is a component of the <a href="http://www.trexarms.org" target="_blank">T-Rex Arms</a> project. <a href="http://www.trexarms.org" target="_blank">www.trexarms.org</a>', BODY_STYLE, CALLSTACK_BYPASS);
+				writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'This Console is a component of the <a href="http://www.trexarms.org" target="_blank">T-Rex Arms</a> project. <a href="http://www.trexarms.org" target="_blank">www.trexarms.org</a>', BODY_STYLE);
 			}
+			
+//			private function stageCommand():void{
+//				if(stage){						
+//					writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + '{align:' + stage.align + ', scaleMode:' + stage.scaleMode + ', quality:' + stage.quality + ', frameRate:' + stage.frameRate + ', numChildren:' + stage.numChildren, BODY_STYLE);
+//					writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + ' width:' + stage.width + ', height: ' + stage.height + ', stageWidth:' + stage.stageWidth + ', stageHeight:' + stage.stageHeight + ', fullScreenWidth:' + stage.fullScreenWidth + ', fullScreenHeight:' + stage.fullScreenHeight + '}', BODY_STYLE);
+//				} else {
+//					writeLine(CALLSTACK_BYPASS, (CATEGORIES_ENABLED ? '             ' : '') + 'null', BODY_STYLE);
+//				}
+//			}
+			
+			//  read a specific SO
+			
+			//  destroy a specific SO
+			
+			//  set public props on named objects in the current application domain
 
 	}
 }
