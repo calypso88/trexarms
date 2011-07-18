@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><!-- saved from url=(0014)about:internet --><html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><link rel="stylesheet" href="../../../style.css" type="text/css" media="screen"><link rel="stylesheet" href="../../../print.css" type="text/css" media="print"><link rel="stylesheet" href="../../../override.css" type="text/css"><meta name="keywords" content="DesignTime,org.trexarms.helpers.DesignTime,DISABLED,designTime,runTime"><title>org.trexarms.helpers.DesignTime</title></head><body><script language="javascript" type="text/javascript" src="../../../asdoc.js"></script><script language="javascript" type="text/javascript" src="../../../help.js"></script><script language="javascript" type="text/javascript" src="../../../cookies.js"></script><script language="javascript" type="text/javascript"><!--
+				asdocTitle = 'DesignTime - API Documentation';
+				var baseRef = '../../../';
+				window.onload = configPage;
+			--></script>
+<script type="text/javascript">
+			scrollToNameAnchor();
+		</script><table class="titleTable" cellpadding="0" cellspacing="0" id="titleTable" style="display:none"><tr><td class="titleTableTitle" align="left">API Documentation</td><td class="titleTableTopNav" align="right"><a href="../../../package-summary.html" onclick="loadClassListFrame('../../../all-classes.html')">All Packages</a>&nbsp;|&nbsp;<a href="../../../class-summary.html" onclick="loadClassListFrame('../../../all-classes.html')">All Classes</a>&nbsp;|&nbsp;<a href="../../../all-index-A.html" onclick="loadClassListFrame('../../../index-list.html')">Index</a>&nbsp;|&nbsp;<a id="framesLink1" href="../../../index.html?org/trexarms/helpers/DesignTime.html&amp;org/trexarms/helpers/class-list.html">Frames</a><a id="noFramesLink1" style="display:none" href="" onclick="parent.location=document.location"> No Frames </a></td><td class="titleTableLogo" align="right" rowspan="3"><img src="../../../images/logo.jpg" class="logoImage" alt=" Adobe Logo " title=" Adobe Logo "></td></tr><tr class="titleTableRow2"><td class="titleTableSubTitle" id="subTitle" align="left">DesignTime</td><td class="titleTableSubNav" id="subNav" align="right"><a href="#methodSummary">Methods</a>&nbsp;| <a href="#constantSummary">Constants</a></td></tr><tr class="titleTableRow3"><td colspan="3">&nbsp;</td></tr></table><script language="javascript" type="text/javascript" xml:space="preserve">
+				<!--
+				
+					if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("DesignTime"); titleBar_setSubNav(true,false,false,false,false,false,false,false,true,false,false	,false,false,false,false,false);}	
+				-->
+			</script><div xmlns:fn="http://www.w3.org/2005/xpath-functions" class="MainContent"><table class="classHeaderTable" cellpadding="0" cellspacing="0"><tr><td class="classHeaderTableLabel">Package</td><td><a href="package-detail.html" onclick="javascript:loadClassListFrame('class-list.html')">org.trexarms.helpers</a></td></tr><tr><td class="classHeaderTableLabel">Class</td><td class="classSignature">public final   class  DesignTime</td></tr><tr><td class="classHeaderTableLabel">Inheritance</td><td class="inheritanceList">DesignTime  <img src="../../../images/inherit-arrow.gif" title="Inheritance" alt="Inheritance" class="inheritArrow"> Object</td></tr></table><p></p><table cellpadding="0" cellspacing="0" border="0"><tr><td style="white-space:nowrap" valign="top"><b> Language Version :&nbsp;</b></td><td>ActionScript 3.0</td></tr></table><table cellpadding="0" cellspacing="0" border="0"><tr><td style="white-space:nowrap" valign="top"><b> Runtime Versions :&nbsp;</b></td><td>AIR 1.0, Flash Player  10.0</td></tr></table><p></p><p></p><p></p>
+	  This class is a static "mode" that can be applied to a running swf to
+	  test layouts and fine-tune positioning of stage elements. This class
+	  is designed to work in conjunction with the T-Rex Arms Console,
+	  although it is not strictly required.
+	 
+	  <p>
+                  <b>NOTE:</b> While active, this class will intercept
+	  mouse and keyboard inputs to the rest of the application. When 
+	  de-activated, inputs will return to normal. You may hold the CTRL key
+	  to pass events through as normal while DesignTime is active.</p>
+	 	            <p>
+                  <b>USE:</b> Click on an object to select it. The active displayObject will
+	  have a yellow border. An active object can be dragged or nudged with
+	  the arrow keys. Additionally, the following keyboard commands are
+	  available:</p>
+	  	           <ul>
+	  		             <li>
+                     <b>ESCAPE:</b> Exit DesignTime and return to normal operation</li>
+	  		             <li>
+                     <b>TAB:</b> Select the next sibling display object in the tree</li>
+	  		             <li>
+                     <b>ENTER:</b> Select the topmost child object of the currently selected object</li>
+	  		             <li>
+                     <b>DELETE:</b> Deselect the current object</li>
+	  		             <li>
+                     <b>X:</b> Deselect the current object</li>
+	  		             <li>
+                     <b>ARROW KEYS:</b> Nudge the current object 1px</li>
+	  		             <li>
+                     <b>SHIFT + ARROW:</b> Nudge the current object 10px</li>
+	  	           </ul>
+	 	            <p>
+                  <b>DISCLAIMER:</b> DesignTime puts applications into an
+	  experimental state! Applications that use complex positioning or updates
+	  over time, such as games, timeline animations, tweened movements, etc.
+	  may cause unexpected behavior, including crashing or lockups. This 
+	  code should NEVER be available to end-users. The author assumes no
+	  responsibility or liability for any damages, or work lost.
+	  <b> Use at your own risk!</b>
+               </p>
+	 
+	           <p></p><br/><hr></div><a name="methodSummary"></a><div class="summarySection"><div class="summaryTableTitle">Public Methods </div><table cellspacing="0" cellpadding="3" class="summaryTable " id="summaryTableMethod"><tr><th>&nbsp;</th><th colspan="2">Method</th><th class="summaryTableOwnerCol">Defined By</th></tr><tr class=""><td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><div class="summarySignature"><a href="#DesignTime()" class="signatureLink">DesignTime</a>()</div><div class="summaryTableDescription">
+ 			 Constructor
+			 </div></td><td class="summaryTableOwnerCol">DesignTime</td></tr><tr class=""><td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><div class="summarySignature"><a href="#designTime()" class="signatureLink">designTime</a>(stageInstance:Stage = null):void</div><div class="summaryTableDescription">[static] </div></td><td class="summaryTableOwnerCol">DesignTime</td></tr><tr class=""><td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><div class="summarySignature"><a href="#runTime()" class="signatureLink">runTime</a>():void</div><div class="summaryTableDescription">[static] </div></td><td class="summaryTableOwnerCol">DesignTime</td></tr></table></div><a name="constantSummary"></a><div class="summarySection"><div class="summaryTableTitle">Public Constants</div><table cellspacing="0" cellpadding="3" class="summaryTable " id="summaryTableConstant"><tr><th>&nbsp;</th><th colspan="2">Constant</th><th class="summaryTableOwnerCol">Defined By</th></tr><tr class=""><td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a href="#DISABLED" class="signatureLink">DISABLED</a> : Boolean = false<div class="summaryTableDescription">[static]   If true, DesignTime will be blocked from turning on.</div></td><td class="summaryTableOwnerCol">DesignTime</td></tr></table></div><script language="javascript" type="text/javascript"><!--
+										showHideInherited();
+										--></script><div class="MainContent"><a name="constructorDetail"></a><div class="detailSectionHeader">Constructor Detail</div><a name="DesignTime()"></a><table class="detailHeader" cellpadding="0" cellspacing="0"><tr><td class="detailHeaderName">DesignTime</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">Constructor</td></tr></table><div class="detailBody"><code>public function DesignTime()</code><p></p><p>
+ 			 Constructor
+			 </p></div><a name="methodDetail"></a><div class="detailSectionHeader">Method Detail</div><a name="designTime()"></a><a name="designTime(flash.display.Stage)"></a><table class="detailHeader" cellpadding="0" cellspacing="0"><tr><td class="detailHeaderName">designTime</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td></tr></table><div class="detailBody"><code> public static function designTime(stageInstance:Stage = null):void</code><p></p><p><span class="label"> Parameters </span><table cellpadding="0" cellspacing="0" border="0"><tr><td width="20px"></td><td><code><span class="label">stageInstance</span>:Stage</code> (default = <code>null</code>)<code></code></td></tr></table></p></div><a name="runTime()"></a><table class="detailHeader" cellpadding="0" cellspacing="0"><tr><td class="detailHeaderName">runTime</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td></tr></table><div class="detailBody"><code> public static function runTime():void</code><p></p></div><div class="detailSectionHeader">Constant Detail</div><a name="constantDetail"></a><a name="DISABLED"></a><table class="detailHeader" cellpadding="0" cellspacing="0"><tr><td class="detailHeaderName">DISABLED</td><td class="detailHeaderType">Constant</td></tr></table><div class="detailBody"><code>public static const DISABLED:Boolean = false</code><p></p><p></p><p>  If true, DesignTime will be blocked from turning on. </p></div><br/><br/><hr><br/><p></p><center class="copyright"><footer></footer><br/>Sun Jul 17 2011, 10:27 PM -07:00  </center></div></body></html><!--<br/>Sun Jul 17 2011, 10:27 PM -07:00  -->
