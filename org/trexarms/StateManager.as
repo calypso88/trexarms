@@ -83,9 +83,10 @@ package org.trexarms {
 			 *    [0] Single-use listeners	(processed first)
 			 *    [1] Model listeners		(processed second)
 			 *    [2] Controller listeners	(processed third)
-			 *    [3] View listeners		(processed last)
+			 *    [3] View listeners		(processed fourth)
+			 *    [4] Generic listeners		(processed last)
 			 */
-			private const LISTENERS:Vector.<Dictionary> = Vector.<Dictionary>([new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary()]);
+			private const LISTENERS:Vector.<Dictionary> = Vector.<Dictionary>([new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary]);
 
 			/**
 			 *  This indexes every state that gets set and saves the most 
@@ -179,14 +180,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting.
 			 */
 			public static function addSingleUseListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListener(state, callback, populateImmediately);
-			}
-
-			/**  @private */
-			public function addSingleUseListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				if(!LISTENERS[0][state]) LISTENERS[0][state] = new Vector.<Function>();
-				LISTENERS[0][state].push(callback);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
+				instance.addListenerAtPriority(state, callback, populateImmediately, 0);
 			}
 
 			/**
@@ -198,31 +192,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addSingleUseListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
-			}
-
-			/**  @private */
-			public function addSingleUseListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				if(!dependentStates){
-					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-					return;
-				} 
-
-				//  try to cull some of the states out before we allocate a new object...
-				var i:int = dependentStates.length - 1;
-				while(i--){
-					if(dependentStates[i] in STATE_ARCHIVE) dependentStates.splice(i, 1);
-				}
-
-				if(dependentStates.length == 0){
-					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-				} else {
-					//  this object will hook back into StateManager until it's 
-					//  spent, then it will free itself for GC.
-					new DependencyChain(state, callback, addSingleUseListener, populateImmediately, dependentStates);
-				}
+				instance.addListenerAtPriorityWithDependencies(state, callback, dependentStates, populateImmediately, 0);
 			}
 
 			/**
@@ -235,15 +205,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting.
 			 */
 			public static function addModelListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				instance.addModelListener(state, callback, populateImmediately);
-			}
-
-			/**  @private */
-			public function addModelListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				if(!LISTENERS[1][state]) LISTENERS[1][state] = new Vector.<Function>();
-				LISTENERS[1][state].unshift(callback);
-//				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				instance.addListenerAtPriority(state, callback, populateImmediately, 1);
 			}
 
 			/**
@@ -255,31 +217,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
-			}
-
-			/**  @private */
-			public function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				if(!dependentStates){
-					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-					return;
-				} 
-
-				//  try to cull some of the states out before we allocate a new object...
-				var i:int = dependentStates.length - 1;
-				while(i--){
-					if(dependentStates[i] in STATE_ARCHIVE) dependentStates.splice(i, 1);
-				}
-
-				if(dependentStates.length == 0){
-					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-				} else {
-					//  this object will hook back into StateManager until it's 
-					//  spent, then it will free itself for GC.
-					new DependencyChain(state, callback, addModelListener, populateImmediately, dependentStates);
-				}
+				instance.addListenerAtPriorityWithDependencies(state, callback, dependentStates, populateImmediately, 1);
 			}
 
 			/**
@@ -292,15 +230,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting.
 			 */
 			public static function addControllerListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				instance.addControllerListener(state, callback, populateImmediately);
-			}
-
-			/**  @private */
-			public function addControllerListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				if(!LISTENERS[2][state]) LISTENERS[2][state] = new Vector.<Function>();
-				LISTENERS[2][state].unshift(callback);
-//				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				instance.addListenerAtPriority(state, callback, populateImmediately, 2);
 			}
 
 			/**
@@ -312,31 +242,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
-			}
-
-			/**  @private */
-			public function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				if(!dependentStates){
-					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-					return;
-				} 
-
-				//  try to cull some of the states out before we allocate a new object...
-				var i:int = dependentStates.length - 1;
-				while(i--){
-					if(dependentStates[i] in STATE_ARCHIVE) dependentStates.splice(i, 1);
-				}
-
-				if(dependentStates.length == 0){
-					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
-				} else {
-					//  this object will hook back into StateManager until it's 
-					//  spent, then it will free itself for GC.
-					new DependencyChain(state, callback, addControllerListener, populateImmediately, dependentStates);
-				}
+				instance.addListenerAtPriorityWithDependencies(state, callback, dependentStates, populateImmediately, 2);
 			}
 
 			/**
@@ -349,15 +255,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting.
 			 */
 			public static function addViewListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				instance.addViewListener(state, callback, populateImmediately);
-			}
-
-			/**  @private */
-			public function addViewListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
-				if(!LISTENERS[3][state]) LISTENERS[3][state] = new Vector.<Function>();
-				LISTENERS[3][state].unshift(callback);
-//				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				instance.addListenerAtPriority(state, callback, populateImmediately, 3);
 			}
 
 			/**
@@ -369,30 +267,96 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
+				instance.addListenerAtPriorityWithDependencies(state, callback, dependentStates, populateImmediately, 3);
 			}
 
-			/**  @private */
-			public function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				if(!dependentStates){
-					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+			/**
+			 *  Sets a listener to fire when the given state is set.
+			 * 
+			 *  @param state The state key to listen to
+			 *  @param callback Callback method or closure
+			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting.
+			 */
+			public static function addListener(state:String, callback:Function, populateImmediately:Boolean = true):void{
+				instance.addListenerAtPriority(state, callback, populateImmediately, 4);
+			}
+			
+			/**
+			 *  Sets a listener to fire after one or more other states have 
+			 *  been resolved.
+			 * 
+			 *  @param state The state key to listen to
+			 *  @param callback Callback method or closure
+			 *  @param dependentStates An array of states that must be triggered before this callback will be executed.
+			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
+			 */
+			public static function addListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
+				instance.addListenerAtPriorityWithDependencies(state, callback, dependentStates, populateImmediately, 4);
+			}
+
+			/** 
+			 *  @private
+			 *  This is exposed for the Dependency Chain - it should not be 
+			 *  called from outside.
+			 *  @param state The state key to listen to
+			 *  @param callback Callback method or closure
+			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
+			 *  @param priority The priority tier to add this listener to
+			 */
+			public static function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:int = 4):void{
+				instance.addListenerAtPriority(state, callback, populateImmediately, priority);
+			}
+
+			/**
+			 *  @private
+			 *  Sets a listener at the given priority level. This should only be accessed
+			 *  by the static access functions.
+			 *  @param state The state key to listen to
+			 *  @param callback Callback method or closure
+			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
+			 *  @param priority The priority tier to add this listener to
+			 */
+			public function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:int = 4):void{
+				if(priority == 0 && populateImmediately && state in STATE_ARCHIVE){
+					callback(STATE_ARCHIVE[state]);											//  catch single-use listeners and don't add them if appropriate
 					return;
-				} 
+				}
+
+				if(!LISTENERS[priority][state]) LISTENERS[priority][state] = new Vector.<Function>();
+				LISTENERS[priority][state].push(callback);
+				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
+			}
+			
+			/**
+			 *  @private
+			 *  Sets a listener at the given priority - after one or more other states 
+			 *  have been satisfied.
+			 *
+			 *  @param state The state key to listen to
+			 *  @param callback Callback method or closure
+			 *  @param dependentStates An array of states that must be triggered before this callback will be executed.
+			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
+			 *  @param priority The priority tier to add this listener to
+			 */
+			public function addListenerAtPriorityWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true, priority:int = 4):void{
+				if(!dependentStates || dependentStates.length < 1){
+					addListenerAtPriority(state, callback, populateImmediately, priority);
+					return;
+				}
 
 				//  try to cull some of the states out before we allocate a new object...
-				var i:int = dependentStates.length - 1;
+				var i:int = dependentStates.length;
 				while(i--){
 					if(dependentStates[i] in STATE_ARCHIVE) dependentStates.splice(i, 1);
 				}
 
-				if(dependentStates.length == 0){
+				if(dependentStates.length < 1){
 					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addListenerAtPriority(state, callback, populateImmediately, priority);
 				} else {
 					//  this object will hook back into StateManager until it's 
 					//  spent, then it will free itself for GC.
-					new DependencyChain(state, callback, addViewListener, populateImmediately, dependentStates);
+					new DependencyChain(state, callback, populateImmediately, dependentStates, priority);
 				}
 			}
 
@@ -500,7 +464,6 @@ package org.trexarms {
 					while(LISTENERS[0][state].length){
 						var callback:Function = LISTENERS[0][state].pop();
 						(data === void) ? callback() : callback(data);			//  this allows us to have callbacks with no parameters
-//						callback(data);
 					}
 				}
 
@@ -561,12 +524,12 @@ package org.trexarms {
 		//--------------------------------------
 
 			/**  Creates a new DependencyChain object. */
-			public function DependencyChain(state:String, callback:Function, registryMethod:Function, populateImmediately:Boolean, blockers:Array){
+			public function DependencyChain(state:String, callback:Function, populateImmediately:Boolean, blockers:Array, priority:int = 0){
 				_state = state;
 				_callback = callback;
-				_registryMethod = registryMethod;
 				_populateImmediately = populateImmediately;
 				_blockers = blockers;
+				_priority = priority;
 
 				//  start waiting for the first dependency
 				listenForNextBlocker();
@@ -578,9 +541,9 @@ package org.trexarms {
 
 			private var _state:String;
 			private var _callback:Function;
-			private var _registryMethod:Function;
 			private var _populateImmediately:Boolean;
 			private var _blockers:Array;
+			private var _priority:int;
 
 		//--------------------------------------
 		//  CALLBACKS
@@ -590,16 +553,16 @@ package org.trexarms {
 				if(_blockers.length){
 					//  we still have blockers - listen for the next one to clear
 					//  (we force populateImmediately to speed through these...)
-					StateManager.addSingleUseListener(_blockers.pop(), listenForNextBlocker, true);
+					//  (these go into priority 0 so they are single-use)
+					StateManager.addListenerAtPriority(_blockers.pop(), listenForNextBlocker, true, 0);
 				} else {
 					//  we're clear to go - finally time to add the real callback
-					//  (_registryMethod will be one of the add__Listener functions)
-					_registryMethod(_state, _callback, _populateImmediately);
+					StateManager.addListenerAtPriority(_state, _callback, _populateImmediately, _priority);
 
 					//  since we don't have any dependencies pointing in here
 					//  any longer, as soon as this function closes, their will
 					//  be no more pointers to this object so it gets collected
-					_callback = _registryMethod = null;
+					_callback = null;
 					_blockers = null;
 				}
 			}
