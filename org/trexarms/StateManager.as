@@ -88,6 +88,9 @@ package org.trexarms {
 			 */
 			private const LISTENERS:Vector.<Dictionary> = Vector.<Dictionary>([new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary(), new Dictionary]);
 
+			/**  Number of priority tiers to crawl */
+			private const LISTENER_LENGTH:int = LISTENERS.length;
+
 			/**
 			 *  This indexes every state that gets set and saves the most 
 			 *  recent value.
@@ -303,7 +306,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 *  @param priority The priority tier to add this listener to
 			 */
-			public static function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:int = 4):void{
+			public static function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:uint = 4):void{
 				instance.addListenerAtPriority(state, callback, populateImmediately, priority);
 			}
 
@@ -316,12 +319,13 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 *  @param priority The priority tier to add this listener to
 			 */
-			public function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:int = 4):void{
+			public function addListenerAtPriority(state:String, callback:Function, populateImmediately:Boolean = true, priority:uint = 4):void{
 				if(priority == 0 && populateImmediately && state in STATE_ARCHIVE){
 					callback(STATE_ARCHIVE[state]);											//  catch single-use listeners and don't add them if appropriate
 					return;
 				}
 
+				if(priority >= LISTENER_LENGTH) priority = LISTENER_LENGTH - 1;
 				if(!LISTENERS[priority][state]) LISTENERS[priority][state] = new Vector.<Function>();
 				LISTENERS[priority][state].push(callback);
 				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
@@ -338,7 +342,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 *  @param priority The priority tier to add this listener to
 			 */
-			public function addListenerAtPriorityWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true, priority:int = 4):void{
+			public function addListenerAtPriorityWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true, priority:uint = 4):void{
 				if(!dependentStates || dependentStates.length < 1){
 					addListenerAtPriority(state, callback, populateImmediately, priority);
 					return;
@@ -400,6 +404,7 @@ package org.trexarms {
 					if(state in LISTENERS[1]) delete LISTENERS[1][state];
 					if(state in LISTENERS[2]) delete LISTENERS[2][state];
 					if(state in LISTENERS[3]) delete LISTENERS[3][state];
+					if(state in LISTENERS[4]) delete LISTENERS[4][state];
 				}
 			}
 
@@ -416,8 +421,7 @@ package org.trexarms {
 
 			/**  @private */
 			public function tickleState(state:String):*{
-				if(state in STATE_ARCHIVE) return setState(state, STATE_ARCHIVE[state]);
-				return setState(state, void);
+				return setState(state, (state in STATE_ARCHIVE) ? STATE_ARCHIVE[state] : void);
 			}
 
 			/**
@@ -467,7 +471,7 @@ package org.trexarms {
 					}
 				}
 
-				for(var tier:int = 1; tier < LISTENERS.length; ++tier){
+				for(var tier:int = 1; tier < LISTENER_LENGTH; ++tier){
 					if(state in LISTENERS[tier] && LISTENERS[tier][state].length){
 						var i:int = LISTENERS[tier][state].length;
 						while(i--){
@@ -524,7 +528,7 @@ package org.trexarms {
 		//--------------------------------------
 
 			/**  Creates a new DependencyChain object. */
-			public function DependencyChain(state:String, callback:Function, populateImmediately:Boolean, blockers:Array, priority:int = 0){
+			public function DependencyChain(state:String, callback:Function, populateImmediately:Boolean, blockers:Array, priority:uint = 0){
 				_state = state;
 				_callback = callback;
 				_populateImmediately = populateImmediately;
@@ -543,7 +547,7 @@ package org.trexarms {
 			private var _callback:Function;
 			private var _populateImmediately:Boolean;
 			private var _blockers:Array;
-			private var _priority:int;
+			private var _priority:uint;
 
 		//--------------------------------------
 		//  CALLBACKS
