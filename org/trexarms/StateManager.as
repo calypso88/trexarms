@@ -255,7 +255,7 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
+				instance.addModelListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
 
 			/**  @private */
@@ -274,7 +274,7 @@ package org.trexarms {
 
 				if(dependentStates.length == 0){
 					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addModelListener(state, callback, populateImmediately);
 				} else {
 					//  this object will hook back into StateManager until it's 
 					//  spent, then it will free itself for GC.
@@ -312,14 +312,14 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
+				instance.addControllerListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
 
 			/**  @private */
 			public function addControllerListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
 					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addControllerListener(state, callback, populateImmediately);
 					return;
 				} 
 
@@ -331,7 +331,7 @@ package org.trexarms {
 
 				if(dependentStates.length == 0){
 					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addControllerListener(state, callback, populateImmediately);
 				} else {
 					//  this object will hook back into StateManager until it's 
 					//  spent, then it will free itself for GC.
@@ -369,14 +369,14 @@ package org.trexarms {
 			 *  @param populateImmediately If true, the state will attempt to be set from the most recent setting, if all dependencies are already resolved.
 			 */
 			public static function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
-				instance.addSingleUseListenerWithDependencies(state, callback, dependentStates, populateImmediately);
+				instance.addViewListenerWithDependencies(state, callback, dependentStates, populateImmediately);
 			}
 
 			/**  @private */
 			public function addViewListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
 					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addViewListener(state, callback, populateImmediately);
 					return;
 				} 
 
@@ -388,7 +388,7 @@ package org.trexarms {
 
 				if(dependentStates.length == 0){
 					//  all these dependencies are already handled - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addViewListener(state, callback, populateImmediately);
 				} else {
 					//  this object will hook back into StateManager until it's 
 					//  spent, then it will free itself for GC.
