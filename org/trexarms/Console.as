@@ -45,6 +45,7 @@ package org.trexarms {
 		import flash.text.TextFormat;
 		import flash.ui.Keyboard;
 		import flash.utils.Dictionary;
+		import flash.utils.getQualifiedClassName;
 		import flash.utils.getTimer;
 		
 		import org.trexarms.helpers.DesignTime;
@@ -451,45 +452,16 @@ package org.trexarms {
 			 *  and cpu footprint.
 			 */
 			public function destroy():void{
-				try{
-					if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, setupStageListeners);
-				} catch(err:Error){}
-
-				try{
-					if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, buildUI);
-				} catch(err:Error){}
-
-				try{
-					if(stage && stage.hasEventListener(KeyboardEvent.KEY_UP)) stage.removeEventListener(KeyboardEvent.KEY_UP, keyUp);
-				} catch(err:Error){}
-				
-				try{
-					if(stage && stage.hasEventListener(KeyboardEvent.KEY_DOWN)) stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDown);
-				} catch(err:Error){}
-
-				try{
-					if(stage && stage.hasEventListener(Event.RESIZE)) stage.removeEventListener(Event.RESIZE, buildUI);
-				} catch(err:Error){}
-
-				try{
-					if(stage && stage.hasEventListener(FullScreenEvent.FULL_SCREEN)) stage.removeEventListener(FullScreenEvent.FULL_SCREEN, buildUI);
-				} catch(err:Error){}
-				
-				try{
-					if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
-				} catch(err:Error){}
-				
-				try{
-					if(hasEventListener(Event.REMOVED_FROM_STAGE)) removeEventListener(Event.REMOVED_FROM_STAGE, removedFromStage);
-				} catch(err:Error){}
-				
-				try{
-					if(TEXTFIELD.hasEventListener(TextEvent.LINK)) TEXTFIELD.removeEventListener(TextEvent.LINK, changeFilter);
-				} catch(err:Error){}
-				
-				try{
-					if(FILTER_LABEL.hasEventListener(TextEvent.LINK)) FILTER_LABEL.removeEventListener(TextEvent.LINK, headerClicked);
-				} catch(err:Error){}
+				try{ if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, setupStageListeners); } catch(err:Error){}
+				try{ if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, buildUI); } catch(err:Error){}
+				try{ if(stage && stage.hasEventListener(KeyboardEvent.KEY_UP)) stage.removeEventListener(KeyboardEvent.KEY_UP, keyUp); } catch(err:Error){}
+				try{ if(stage && stage.hasEventListener(KeyboardEvent.KEY_DOWN)) stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDown); } catch(err:Error){}
+				try{ if(stage && stage.hasEventListener(Event.RESIZE)) stage.removeEventListener(Event.RESIZE, buildUI); } catch(err:Error){}
+				try{ if(stage && stage.hasEventListener(FullScreenEvent.FULL_SCREEN)) stage.removeEventListener(FullScreenEvent.FULL_SCREEN, buildUI); } catch(err:Error){}
+				try{ if(hasEventListener(Event.ADDED_TO_STAGE)) removeEventListener(Event.ADDED_TO_STAGE, addedToStage); } catch(err:Error){}
+				try{ if(hasEventListener(Event.REMOVED_FROM_STAGE)) removeEventListener(Event.REMOVED_FROM_STAGE, removedFromStage); } catch(err:Error){}
+				try{ if(TEXTFIELD.hasEventListener(TextEvent.LINK)) TEXTFIELD.removeEventListener(TextEvent.LINK, changeFilter); } catch(err:Error){}
+				try{ if(FILTER_LABEL.hasEventListener(TextEvent.LINK)) FILTER_LABEL.removeEventListener(TextEvent.LINK, headerClicked); } catch(err:Error){}
 				
 				while(numChildren) removeChildAt(0);
 				if(parent) parent.removeChild(this);
@@ -670,23 +642,43 @@ package org.trexarms {
 			/**  Converts a collection of parameters into a single string representation */
 			private static function stringifyArgs(...arguments):String{
 				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i){
-					if(arguments[i] == null){
-						s += 'null ';
-					} else if(arguments[i] == undefined){
-						s += 'undefined ';
-					} else if(arguments[i] == void){
-						s += 'void ';
-					} else if(arguments[i] is String){
-						s += arguments[i] + ' ';
-					} else if('toString' in arguments[i] && arguments[i]['toString'] is Function){
-						s += arguments[i].toString() + ' ';
-					} else {
-						s += String(arguments[i]) + ' ';
-					}
-				}
-				
+				for(var i:int = 0; i < arguments.length; ++i) s += stringify(arguments[i]) + ' ';
 				return s;
+			}
+			
+			/**  Converts complex Objects to single-line object notation */
+			private static function stringify(o:*):String{
+				//  TODO: this one needs a lot of testing...
+
+				var s:String = '';
+
+				if(o == null) return 'null';
+				if(o == undefined) return 'undefined';
+				if(o == void) return 'void';
+
+				if(o is Boolean) return String(o);
+				if(o is Date) return (o as Date).toLocaleString();
+				if(o is int || o is uint || o is Number) return String(o);
+				if(o is String) return String(o);
+
+				if(o is XML || o is XMLList){
+					s = String(o);
+					while(s.search('\n') > -1) s = s.replace('\n', '');
+					return s;
+				}
+
+				if((o is Array || getQualifiedClassName(o).indexOf('vec::Vector') > -1) && 'length' in o){
+					for(var i:int = 0; i < int(o.length); ++i) s += stringify(o[i]) + ', ';
+					return (s == '') ? '[]' : '[' + s.substr(0, s.length - 2) + ']';
+				}
+
+				if(o.constructor === Object || o is Dictionary){
+					for(var key:String in o) s += key + ': ' + stringify(o[key]);
+					return (s == '') ? '{}' : '{' + s.substr(0, s.length - 2) + '}';
+				}
+
+				if('toString' in o && o['toString'] is Function) return String(o.toString());
+				return String(o);
 			}
 
 			/**
