@@ -239,7 +239,7 @@ package org.trexarms {
 					return;
 				}
 
-				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), BODY_STYLE);
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs.call(null, arguments), BODY_STYLE);
 			}
 
 			/**
@@ -256,7 +256,7 @@ package org.trexarms {
 					return;
 				}
 
-				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), WARNING_STYLE);
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs.call(null, arguments), WARNING_STYLE);
 			}
 
 			/**
@@ -273,7 +273,7 @@ package org.trexarms {
 					return;
 				}
 
-				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), ERROR_STYLE);
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs.call(null, arguments), ERROR_STYLE);
 			}
 			
 			/**
@@ -290,7 +290,7 @@ package org.trexarms {
 					return;
 				}
 
-				instance.writeLine(classFromCallstack(new Error()), stringifyArgs(arguments), COMMENT_STYLE);
+				instance.writeLine(classFromCallstack(new Error()), stringifyArgs.call(null, arguments), COMMENT_STYLE);
 			}
 
 			/**
@@ -305,7 +305,7 @@ package org.trexarms {
 					return;
 				}
 				
-				instance.writeLine(key, stringifyArgs(arguments), BODY_STYLE);
+				instance.writeLine(key, stringifyArgs.call(null, arguments), BODY_STYLE);
 			}
 			
 			/**
@@ -640,9 +640,9 @@ package org.trexarms {
 			}
 
 			/**  Converts a collection of parameters into a single string representation */
-			private static function stringifyArgs(...arguments):String{
+			private static function stringifyArgs(a:Array):String{
 				var s:String = '';
-				for(var i:int = 0; i < arguments.length; ++i) s += stringify(arguments[i]) + ' ';
+				for(var i:int = 0; i < a.length; ++i) s += stringify(a[i]) + ' ';
 				return s;
 			}
 			
@@ -673,7 +673,7 @@ package org.trexarms {
 				}
 
 				if(o.constructor === Object || o is Dictionary){
-					for(var key:String in o) s += key + ': ' + stringify(o[key]);
+					for(var key:String in o) s += key + ': ' + stringify(o[key]) + ', ';
 					return (s == '') ? '{}' : '{' + s.substr(0, s.length - 2) + '}';
 				}
 
