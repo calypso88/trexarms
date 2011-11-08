@@ -96,8 +96,8 @@ package org.trexarms {
 			private var _timeBetweenLastTwoFrames:int;	
 			private var _timeLeftToProcess:int;		
 			private var _maxTicksPerIteration:int;
-			private var _callbackIndex:uint;
-			private var _tempCallbackLength:uint;
+			private var _callbackIndex:int;
+			private var _tempCallbackLength:int = 0;
 			private var _executing:Boolean;
 			private var _functionsAreWaitingToUnregister:Boolean;
 			private var _functionsToUnregister:Vector.<Function> = new Vector.<Function>();
@@ -412,16 +412,16 @@ package org.trexarms {
 				_maxTicksPerIteration = MAX_TICKS_PER_ITERATION;
 				_executing = true;
 
-				if(_tempCallbackLength){										//  perform our callNextFrames
-					while(_tempCallbackLength--) TEMPORARY_CALLBACKS[_tempCallbackLength]();
-					TEMPORARY_CALLBACKS.length = 0;
+				if(_tempCallbackLength > 0){										//  perform our callNextFrames
+					while(TEMPORARY_CALLBACKS.length) TEMPORARY_CALLBACKS.pop()();
+					_tempCallbackLength = 0;
 				}
 				
 				while(_timeLeftToProcess > 0 && _maxTicksPerIteration--){
 					++_ticks;
 					//  perform the callbacks
 					_callbackIndex = CALLBACKS.length;
-					while(_callbackIndex--){
+					while(--_callbackIndex >= 0){
 						//  NOTE: the iterators in here are class-scoped and
 						//  can be screwed with by forcing an unregister...
 						CALLBACKS[_callbackIndex]();
