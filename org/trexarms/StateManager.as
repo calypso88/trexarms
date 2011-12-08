@@ -175,6 +175,45 @@ package org.trexarms {
 		//--------------------------------------
 
 			/**
+			 *  Immediately removes a listener from a given state.
+			 *
+			 *  @param state The state being listened to.
+			 *  @param callback The function that would be triggered.
+			 */
+			public static function removeListener(state:String, callback:Function):void{
+				instance.removeListener(state, callback);
+			}
+
+			/**
+			 *  @private
+			 *  Immediately removes a listener from a given state.
+			 *
+			 *  @param state The state being listened to.
+			 *  @param callback The function that would be triggered.
+			 */
+			public function removeListener(state:String, callback:Function):void{
+				if(state in LISTENERS[0] && LISTENERS[0][state]){
+					while(LISTENERS[0][state].indexOf(callback) > -1) LISTENERS[0][state].splice(LISTENERS[0][state].indexOf(callback), 1);
+				}
+
+				if(state in LISTENERS[1] && LISTENERS[1][state]){
+					while(LISTENERS[1][state].indexOf(callback) > -1) LISTENERS[1][state].splice(LISTENERS[1][state].indexOf(callback), 1);
+				}
+
+				if(state in LISTENERS[2] && LISTENERS[2][state]){
+					while(LISTENERS[2][state].indexOf(callback) > -1) LISTENERS[2][state].splice(LISTENERS[2][state].indexOf(callback), 1);
+				}
+
+				if(state in LISTENERS[3] && LISTENERS[3][state]){
+					while(LISTENERS[3][state].indexOf(callback) > -1) LISTENERS[3][state].splice(LISTENERS[3][state].indexOf(callback), 1);
+				}
+
+				if(state in LISTENERS[4] && LISTENERS[4][state]){
+					while(LISTENERS[4][state].indexOf(callback) > -1) LISTENERS[4][state].splice(LISTENERS[4][state].indexOf(callback), 1);
+				}
+			}
+
+			/**
 			 *  Sets a listener to fire one time the next time its state is set.
 			 *  These listeners are the highest priority.
 			 * 
@@ -446,7 +485,7 @@ package org.trexarms {
 			}
 
 			/**  @private */
-			public function setState(state:String, data:*, processImmediately:Boolean = false):*{
+			public function setState(state:String, data:* = void, processImmediately:Boolean = false):*{
 				//  we use this flag to find the cases when a callback triggers
 				//  a second setState - since we don't want to get into recursion
 				//  we add the new state onto the stack as normal and process 
