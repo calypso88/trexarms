@@ -243,7 +243,7 @@ package org.trexarms {
 				if(!LISTENERS[1][state]) LISTENERS[1][state] = new Vector.<Function>();
 				LISTENERS[1][state].unshift(callback);
 //				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
 			}
 
 			/**
@@ -300,7 +300,7 @@ package org.trexarms {
 				if(!LISTENERS[2][state]) LISTENERS[2][state] = new Vector.<Function>();
 				LISTENERS[2][state].unshift(callback);
 //				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
 			}
 
 			/**
@@ -357,7 +357,7 @@ package org.trexarms {
 				if(!LISTENERS[3][state]) LISTENERS[3][state] = new Vector.<Function>();
 				LISTENERS[3][state].unshift(callback);
 //				if(populateImmediately && state in STATE_ARCHIVE) setState(state, STATE_ARCHIVE[state]);
-				if(populateImmediately && state in STATE_ARCHIVE) callback(state);
+				if(populateImmediately && state in STATE_ARCHIVE) callback(STATE_ARCHIVE[state]);
 			}
 
 			/**
