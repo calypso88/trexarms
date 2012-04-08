@@ -453,7 +453,7 @@ package org.trexarms {
 			/**  @private */
 			public function tickleState(state:String):*{
 				if(state in STATE_ARCHIVE) return setState(state, STATE_ARCHIVE[state]);
-				return setState(state, void);
+				return setState(state, null);
 			}
 
 			/**
@@ -473,7 +473,7 @@ package org.trexarms {
 			 *  @param processImmediately If true this request skips any queued setState calls and fires immediately.
 			 *  @return The data package passed in.
 			 */
-			public static function setState(state:String, data:* = void, processImmediately:Boolean = false):*{
+			public static function setState(state:String, data:* = null, processImmediately:Boolean = false):*{
 				return instance.setState(state, data, processImmediately);
 			}
 
@@ -486,20 +486,20 @@ package org.trexarms {
 				//  state now - no matter what.
 				if(_settingState && !processImmediately){
 					PENDING_STATE_KEYS.unshift(state);
-					PENDING_STATE_DATA.unshift(data || void);
+					PENDING_STATE_DATA.unshift(data || null);
 					if(!_ticking) ClockManager.registerCallback(onTick);		//  we need to be called in the future - so register for updates
 					_ticking = true;
 					return;
 				}
 
 				_settingState = true;
-				STATE_ARCHIVE[state] = data || void;
+				STATE_ARCHIVE[state] = data || null;
 				--_statesToProcessThisTick;
 				//  handle single-use listeners here
 				if(state in LISTENERS[0]){
 					while(LISTENERS[0][state].length){
 						var callback:Function = LISTENERS[0][state].pop();
-						(data === void) ? callback() : callback(data);			//  this allows us to have callbacks with no parameters
+						(data === null) ? callback() : callback(data);			//  this allows us to have callbacks with no parameters
 //						callback(data);
 					}
 				}
@@ -508,7 +508,7 @@ package org.trexarms {
 					if(state in LISTENERS[tier] && LISTENERS[tier][state].length){
 						var i:int = LISTENERS[tier][state].length;
 						while(i--){
-							(data === void) ? LISTENERS[tier][state][i]() : LISTENERS[tier][state][i](data);
+							(data === null) ? LISTENERS[tier][state][i]() : LISTENERS[tier][state][i](data);
 						}
 					}
 				}
