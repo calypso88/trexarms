@@ -262,7 +262,7 @@ package org.trexarms {
 			public function addModelListenerWithDependencies(state:String, callback:Function, dependentStates:Array, populateImmediately:Boolean = true):void{
 				if(!dependentStates){
 					//  got no dependencies - add as normal
-					addSingleUseListener(state, callback, populateImmediately);
+					addModelListener(state, callback, populateImmediately);
 					return;
 				} 
 
